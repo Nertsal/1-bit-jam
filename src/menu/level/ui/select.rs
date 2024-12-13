@@ -256,6 +256,20 @@ impl LevelSelectUI {
                 if widget.state.clicked {
                     state.select_music(widget.music.meta.id);
                     tab = Some(LevelSelectTab::Group);
+
+                    // If there is only 1 group for that music, automatically select it
+                    let local = local.inner.borrow();
+                    let mut groups = local
+                        .groups
+                        .iter()
+                        .filter(|(_, group)| group.data.music == widget.music.meta.id);
+                    if let Some((index, _)) = groups.next() {
+                        if groups.next().is_none() {
+                            drop(local);
+                            state.select_group(index);
+                            tab = Some(LevelSelectTab::Difficulty);
+                        }
+                    }
                 }
             }
             if let Some(tab) = tab {
