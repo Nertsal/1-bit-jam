@@ -1,0 +1,11 @@
+id = 1
+public = true
+original = true
+name = "Far from Dark"
+romanized = "Far from Dark"
+bpm = 170.0
+
+[[authors]]
+id = 2
+name = "IcyLava"
+romanized = "IcyLava"

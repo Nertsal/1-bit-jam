@@ -42,7 +42,7 @@ impl Controller {
         log::debug!("Loading all local music");
 
         #[cfg(target_arch = "wasm32")]
-        {
+        let music = {
             match web::load_music_all(&self.rexie, &self.geng).await {
                 Ok(items) => Ok(items),
                 Err(err) => {
@@ -50,18 +50,22 @@ impl Controller {
                     anyhow::bail!("check logs");
                 }
             }
-        }
+        };
         #[cfg(not(target_arch = "wasm32"))]
-        {
-            native::load_music_all(&self.geng).await
+        let music = { native::load_music_all(&self.geng).await };
+
+        let mut music = music?;
+        if let Ok(assets) = load_music_all_assets(&self.geng).await {
+            music.extend(assets);
         }
+        Ok(music)
     }
 
     pub async fn load_groups_all(&self) -> Result<Vec<(PathBuf, LevelSet)>> {
         log::debug!("Loading all local groups");
 
         #[cfg(target_arch = "wasm32")]
-        {
+        let groups = {
             match web::load_groups_all(&self.rexie).await {
                 Ok(items) => Ok(items),
                 Err(err) => {
@@ -69,11 +73,15 @@ impl Controller {
                     anyhow::bail!("check logs");
                 }
             }
-        }
+        };
         #[cfg(not(target_arch = "wasm32"))]
-        {
-            native::load_groups_all().await
+        let groups = { native::load_groups_all().await };
+
+        let mut groups = groups?;
+        if let Ok(assets) = load_groups_all_assets().await {
+            groups.extend(assets);
         }
+        Ok(groups)
     }
 
     pub async fn save_music(&self, music: &CachedMusic, data: &[u8]) -> Result<()> {
@@ -235,4 +243,78 @@ impl CachedGroup {
             level_hashes,
         }
     }
+}
+
+async fn load_music_all_assets(geng: &Geng) -> Result<Vec<CachedMusic>> {
+    let music_path = run_dir().join("assets").join("groups").join("music");
+    if !music_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let list: Vec<String> = file::load_detect(music_path.join("_list.ron")).await?;
+    let paths: Vec<_> = list
+        .into_iter()
+        .map(|entry| music_path.join(entry))
+        .collect();
+    let music_loaders = paths.into_iter().map(|path| load_music(geng, path));
+    let music = future::join_all(music_loaders).await;
+
+    let mut res = Vec::new();
+    for music in music {
+        match music {
+            Ok(music) => res.push(music),
+            Err(err) => {
+                log::error!("failed to load music: {}", err);
+            }
+        }
+    }
+
+    Ok(res)
+}
+
+async fn load_music(geng: &Geng, path: PathBuf) -> Result<CachedMusic> {
+    let res = async {
+        log::debug!("loading music at {:?}", &path);
+        let music = CachedMusic::load(geng.asset_manager(), &path).await?;
+        Ok(music)
+    }
+    .await;
+    if let Err(err) = &res {
+        log::error!("failed to load music: {:?}", err);
+    }
+    res
+}
+
+async fn load_groups_all_assets() -> Result<Vec<(PathBuf, LevelSet)>> {
+    let groups_path = run_dir().join("assets").join("groups").join("levels");
+    if !groups_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let list: Vec<String> = file::load_detect(groups_path.join("_list.ron")).await?;
+    let paths: Vec<_> = list
+        .into_iter()
+        .map(|entry| groups_path.join(entry))
+        .collect();
+
+    let load_group = |path| async move {
+        let bytes = file::load_bytes(&path).await?;
+        let group: LevelSet = bincode::deserialize(&bytes)?;
+        anyhow::Ok((path, group))
+    };
+
+    let group_loaders = paths.into_iter().map(load_group);
+    let groups = future::join_all(group_loaders).await;
+
+    let mut res = Vec::new();
+    for group in groups {
+        match group {
+            Ok((path, group)) => res.push((path, group)),
+            Err(err) => {
+                log::error!("failed to load group: {}", err);
+            }
+        }
+    }
+
+    Ok(res)
 }
