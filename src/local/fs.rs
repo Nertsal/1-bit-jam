@@ -42,7 +42,7 @@ impl Controller {
         log::debug!("Loading all local music");
 
         #[cfg(target_arch = "wasm32")]
-        let music = {
+        let music: Result<Vec<CachedMusic>> = {
             match web::load_music_all(&self.rexie, &self.geng).await {
                 Ok(items) => Ok(items),
                 Err(err) => {
@@ -65,7 +65,7 @@ impl Controller {
         log::debug!("Loading all local groups");
 
         #[cfg(target_arch = "wasm32")]
-        let groups = {
+        let groups: Result<Vec<(PathBuf, LevelSet)>> = {
             match web::load_groups_all(&self.rexie).await {
                 Ok(items) => Ok(items),
                 Err(err) => {
@@ -247,9 +247,6 @@ impl CachedGroup {
 
 async fn load_music_all_assets(geng: &Geng) -> Result<Vec<CachedMusic>> {
     let music_path = run_dir().join("assets").join("groups").join("music");
-    if !music_path.exists() {
-        return Ok(Vec::new());
-    }
 
     let list: Vec<String> = file::load_detect(music_path.join("_list.ron")).await?;
     let paths: Vec<_> = list
@@ -287,9 +284,6 @@ async fn load_music(geng: &Geng, path: PathBuf) -> Result<CachedMusic> {
 
 async fn load_groups_all_assets() -> Result<Vec<(PathBuf, LevelSet)>> {
     let groups_path = run_dir().join("assets").join("groups").join("levels");
-    if !groups_path.exists() {
-        return Ok(Vec::new());
-    }
 
     let list: Vec<String> = file::load_detect(groups_path.join("_list.ron")).await?;
     let paths: Vec<_> = list
