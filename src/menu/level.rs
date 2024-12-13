@@ -109,6 +109,19 @@ impl MenuState {
         {
             self.switch_group = None;
             self.switch_level = None;
+
+            // If there is only 1 group for that music, automatically select it
+            let local = self.context.local.inner.borrow();
+            let mut groups = local
+                .groups
+                .iter()
+                .filter(|(_, group)| Some(group.data.music) == self.switch_music);
+            if let Some((index, _)) = groups.next() {
+                if groups.next().is_none() {
+                    drop(local);
+                    self.select_group(index);
+                }
+            }
         }
     }
 
@@ -375,6 +388,7 @@ impl LevelMenu {
                     if current_group.time.is_min() {
                         // Switch
                         current_group.data = switch_group;
+                        self.ui.level_select.select_tab(LevelSelectTab::Difficulty);
                     }
                 } else {
                     current_group.time.change(delta_time);
@@ -398,6 +412,7 @@ impl LevelMenu {
                 time: Bounded::new_zero(0.25),
                 going_up: true,
             });
+            self.ui.level_select.select_tab(LevelSelectTab::Difficulty);
         }
     }
 
