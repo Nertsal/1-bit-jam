@@ -11,6 +11,12 @@ pub struct MusicAssets {
 }
 
 #[derive(geng::asset::Load)]
+pub struct LoadingAssets {
+    #[load(path = "fonts/pixel.ttf")]
+    pub font: geng::Font,
+}
+
+#[derive(geng::asset::Load)]
 pub struct Assets {
     pub sprites: Sprites,
     pub dither: DitherAssets,
@@ -66,7 +72,7 @@ pub struct Sprites {
     #[load(options(filter = "ugli::Filter::Nearest"))]
     pub settings: Rc<ugli::Texture>,
     #[load(options(filter = "ugli::Filter::Nearest"))]
-    pub discord: Rc<ugli::Texture>,
+    pub discor: Rc<ugli::Texture>,
     #[load(options(filter = "ugli::Filter::Nearest"))]
     pub star: Rc<ugli::Texture>,
     #[load(options(filter = "ugli::Filter::Nearest"))]

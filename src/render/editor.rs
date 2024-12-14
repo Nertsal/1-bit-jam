@@ -40,7 +40,7 @@ impl EditorRender {
             geng: context.geng.clone(),
             // assets: assets.clone(),
             dither: DitherRender::new(&context.geng, &context.assets),
-            util: UtilRender::new(context.clone()),
+            util: UtilRender::new(&context.geng, &context.assets),
             ui: UiRender::new(context.clone()),
             mask: MaskedRender::new(&context.geng, &context.assets, vec2(1, 1)),
             // unit_quad: geng_utils::geometry::unit_quad_geometry(geng.ugli()),

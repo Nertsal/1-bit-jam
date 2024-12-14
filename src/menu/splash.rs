@@ -15,7 +15,7 @@ pub struct SplashScreen {
 impl SplashScreen {
     pub fn new(context: Context, client: Option<&Arc<ctl_client::Nertboard>>) -> Self {
         Self {
-            util: UtilRender::new(context.clone()),
+            util: UtilRender::new(&context.geng, &context.assets),
 
             time: Time::ZERO,
 

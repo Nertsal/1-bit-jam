@@ -39,7 +39,7 @@ impl ProfileWidget {
                 // login: ButtonWidget::new("Login"),
                 // register: ButtonWidget::new("Register"),
                 login_with: TextWidget::new("Login with"),
-                discord: IconButtonWidget::new_normal(&assets.sprites.discord),
+                discord: IconButtonWidget::new_normal(&assets.sprites.discor),
             },
             logged: LoggedWidget {
                 state: WidgetState::new(),

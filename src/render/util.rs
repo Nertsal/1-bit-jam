@@ -3,7 +3,8 @@ use super::*;
 use crate::ui::UiContext;
 
 pub struct UtilRender {
-    context: Context,
+    geng: Geng,
+    assets: Rc<Assets>,
     pub unit_quad: ugli::VertexBuffer<draw2d::TexturedVertex>,
 }
 
@@ -74,10 +75,11 @@ impl Default for TextRenderOptions {
 }
 
 impl UtilRender {
-    pub fn new(context: Context) -> Self {
+    pub fn new(geng: &Geng, assets: &Rc<Assets>) -> Self {
         Self {
-            unit_quad: geng_utils::geometry::unit_quad_geometry(context.geng.ugli()),
-            context,
+            geng: geng.clone(),
+            assets: assets.clone(),
+            unit_quad: geng_utils::geometry::unit_quad_geometry(geng.ugli()),
         }
     }
 
@@ -139,11 +141,11 @@ impl UtilRender {
                 [a, b, c, a, c, d]
             })
             .collect();
-        let slices = ugli::VertexBuffer::new_dynamic(self.context.geng.ugli(), slices);
+        let slices = ugli::VertexBuffer::new_dynamic(self.geng.ugli(), slices);
 
         ugli::draw(
             framebuffer,
-            &self.context.assets.shaders.texture,
+            &self.assets.shaders.texture,
             ugli::DrawMode::Triangles,
             &slices,
             (
@@ -174,7 +176,7 @@ impl UtilRender {
         framebuffer: &mut ugli::Framebuffer,
     ) {
         let text = text.as_ref();
-        let font = &self.context.assets.fonts.pixel;
+        let font = &self.assets.fonts.pixel;
 
         let measure = font
             .measure(text, vec2::splat(geng::TextAlign::CENTER))
@@ -197,11 +199,11 @@ impl UtilRender {
             |glyphs, texture| {
                 ugli::draw(
                     framebuffer,
-                    &self.context.assets.shaders.sdf,
+                    &self.assets.shaders.sdf,
                     ugli::DrawMode::TriangleFan,
                     ugli::instanced(
                         &self.unit_quad,
-                        &ugli::VertexBuffer::new_dynamic(self.context.geng.ugli(), glyphs.to_vec()),
+                        &ugli::VertexBuffer::new_dynamic(self.geng.ugli(), glyphs.to_vec()),
                     ),
                     (
                         ugli::uniforms! {
@@ -269,18 +271,18 @@ impl UtilRender {
     ) {
         let (texture, transform) = match collider.shape {
             Shape::Circle { radius } => (
-                &self.context.assets.sprites.radial_gradient,
+                &self.assets.sprites.radial_gradient,
                 mat3::scale_uniform(radius.as_f32()),
             ),
             Shape::Line { width } => {
                 let inf = 999.0;
                 (
-                    &self.context.assets.sprites.linear_gradient,
+                    &self.assets.sprites.linear_gradient,
                     mat3::scale(vec2(inf, width.as_f32()) / 2.0),
                 )
             }
             Shape::Rectangle { width, height } => (
-                &self.context.assets.sprites.linear_gradient,
+                &self.assets.sprites.linear_gradient,
                 mat3::scale(vec2(width.as_f32(), height.as_f32()) / 2.0),
             ),
         };
@@ -291,7 +293,7 @@ impl UtilRender {
         let framebuffer_size = framebuffer.size();
         ugli::draw(
             framebuffer,
-            &self.context.assets.shaders.light,
+            &self.assets.shaders.light,
             ugli::DrawMode::TriangleFan,
             &self.unit_quad,
             (
@@ -319,7 +321,7 @@ impl UtilRender {
     ) {
         match collider.shape {
             Shape::Circle { radius } => {
-                self.context.geng.draw2d().draw2d(
+                self.geng.draw2d().draw2d(
                     framebuffer,
                     camera,
                     &draw2d::Ellipse::circle_with_cut(
@@ -332,7 +334,7 @@ impl UtilRender {
             }
             Shape::Line { width } => {
                 let inf = 1e3; // camera.fov;
-                self.context.geng.draw2d().draw2d(
+                self.geng.draw2d().draw2d(
                     framebuffer,
                     camera,
                     &draw2d::Segment::new(
@@ -346,7 +348,7 @@ impl UtilRender {
                     .rotate(collider.rotation.map(Coord::as_f32))
                     .translate(collider.position.as_f32()),
                 );
-                self.context.geng.draw2d().draw2d(
+                self.geng.draw2d().draw2d(
                     framebuffer,
                     camera,
                     &draw2d::Segment::new(
@@ -367,7 +369,7 @@ impl UtilRender {
                     .extend_uniform(-outline_width / 2.0)
                     .corners();
                 let m = (a + b) / 2.0;
-                self.context.geng.draw2d().draw2d(
+                self.geng.draw2d().draw2d(
                     framebuffer,
                     camera,
                     &draw2d::Chain::new(
@@ -449,7 +451,7 @@ impl UtilRender {
                 // Finish dash
                 let dash_length = dash_length.min(dash_full_length);
                 let dash_end = segment.0 + direction_norm * dash_length;
-                self.context.geng.draw2d().draw2d(
+                self.geng.draw2d().draw2d(
                     framebuffer,
                     camera,
                     &draw2d::Chain::new(
@@ -478,7 +480,7 @@ impl UtilRender {
         let dashes = (delta_len / full_length).floor() as usize;
         for i in 0..dashes {
             let dash_start = segment.0 + direction_norm * i as f32 * full_length;
-            self.context.geng.draw2d().draw2d(
+            self.geng.draw2d().draw2d(
                 framebuffer,
                 camera,
                 &draw2d::Chain::new(
@@ -497,7 +499,7 @@ impl UtilRender {
         let last_len = (segment.1 - last_start).len();
         let dash_len = last_len.min(options.dash_length);
         let last_end = last_start + direction_norm * dash_len;
-        self.context.geng.draw2d().draw2d(
+        self.geng.draw2d().draw2d(
             framebuffer,
             camera,
             &draw2d::Chain::new(
@@ -525,7 +527,7 @@ impl UtilRender {
                 LitState::Light => (THEME.dark, THEME.light),
                 LitState::Danger => (THEME.light, THEME.danger),
             };
-            self.context.geng.draw2d().draw2d(
+            self.geng.draw2d().draw2d(
                 framebuffer,
                 camera,
                 &draw2d::Ellipse::circle(tail.pos.as_f32(), radius.as_f32(), in_color),
@@ -564,18 +566,16 @@ impl UtilRender {
         //     camera,
         //     framebuffer,
         // );
-        self.context.geng.draw2d().draw2d(
+        self.geng.draw2d().draw2d(
             framebuffer,
             camera,
             &draw2d::Quad::new(aabb.extend_uniform(font_size * 0.1), theme.light),
         );
 
         // Dark fill
-        self.context.geng.draw2d().draw2d(
-            framebuffer,
-            camera,
-            &draw2d::Quad::new(aabb, theme.dark),
-        );
+        self.geng
+            .draw2d()
+            .draw2d(framebuffer, camera, &draw2d::Quad::new(aabb, theme.dark));
 
         // Health fill
         let color = match state {
@@ -599,7 +599,7 @@ impl UtilRender {
         let transform = mat3::translate(aabb.center()) * mat3::scale(aabb.size() / 2.0);
         ugli::draw(
             framebuffer,
-            &self.context.assets.shaders.solid,
+            &self.assets.shaders.solid,
             ugli::DrawMode::TriangleFan,
             &self.unit_quad,
             (

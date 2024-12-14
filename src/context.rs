@@ -21,12 +21,12 @@ pub struct Context {
 impl Context {
     pub async fn new(
         geng: &Geng,
-        assets: &Rc<Assets>,
+        assets: Rc<Assets>,
         client: Option<&Arc<Nertboard>>,
     ) -> Result<Self> {
         Ok(Self {
             geng: geng.clone(),
-            assets: assets.clone(),
+            assets,
             music: Rc::new(MusicManager::new()),
             local: Rc::new(LevelCache::load(client, geng).await?),
             options: Rc::new(RefCell::new(

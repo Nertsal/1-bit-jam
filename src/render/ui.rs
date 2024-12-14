@@ -17,7 +17,7 @@ pub struct UiRender {
 impl UiRender {
     pub fn new(context: Context) -> Self {
         Self {
-            util: UtilRender::new(context.clone()),
+            util: UtilRender::new(&context.geng, &context.assets),
             context,
         }
     }

@@ -23,7 +23,7 @@ impl GameRender {
         Self {
             dither: DitherRender::new(&context.geng, &context.assets),
             masked: MaskedRender::new(&context.geng, &context.assets, vec2(1, 1)),
-            util: UtilRender::new(context.clone()),
+            util: UtilRender::new(&context.geng, &context.assets),
             ui: UiRender::new(context.clone()),
             context,
 

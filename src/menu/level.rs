@@ -200,7 +200,7 @@ impl LevelMenu {
 
         let mut state = Self {
             render: MenuRender::new(context.clone()),
-            util: UtilRender::new(context.clone()),
+            util: UtilRender::new(&context.geng, &context.assets),
             dither: DitherRender::new(&context.geng, &context.assets),
             masked: MaskedRender::new(&context.geng, &context.assets, vec2(1, 1)),
 

@@ -1,8 +1,9 @@
 mod level;
+mod loading;
 mod main;
 mod splash;
 
-pub use self::{level::*, main::*, splash::*};
+pub use self::{level::*, loading::*, main::*, splash::*};
 
 use crate::{
     prelude::*,

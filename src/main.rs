@@ -16,8 +16,9 @@ mod task;
 mod ui;
 mod util;
 
-// use leaderboard::Leaderboard;
+use context::Context;
 
+use ctl_client::Nertboard;
 use geng::prelude::*;
 
 const FIXED_FPS: f64 = 60.0; // TODO: upgrade to 120 i think
@@ -100,6 +101,44 @@ fn main() {
 }
 
 async fn geng_main(geng: Geng, opts: Opts) -> anyhow::Result<()> {
+    let loading_assets: Rc<assets::LoadingAssets> =
+        geng::asset::Load::load(geng.asset_manager(), &run_dir().join("assets"), &())
+            .await
+            .context("when loading assets")?;
+
+    let load_everything = load_everything(geng.clone());
+    let loading_screen =
+        menu::LoadingScreen::new(&geng, loading_assets, load_everything, opts.skip_intro).run();
+
+    let (context, secrets, client) = loading_screen
+        .await
+        .ok_or_else(|| anyhow::Error::msg("loading screen failed"))??;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(command) = opts.command {
+        command
+            .execute(context, secrets)
+            .await
+            .context("failed to execute the command")?;
+        return Ok(());
+    }
+
+    // Main menu
+    if opts.skip_intro {
+        let leaderboard = leaderboard::Leaderboard::new(&geng, client.as_ref());
+        let state = menu::LevelMenu::new(context, leaderboard);
+        geng.run_state(state).await;
+    } else {
+        let state = menu::SplashScreen::new(context, client.as_ref());
+        geng.run_state(state).await;
+    }
+
+    Ok(())
+}
+
+async fn load_everything(
+    geng: Geng,
+) -> anyhow::Result<(Context, Option<Secrets>, Option<Arc<Nertboard>>)> {
     let manager = geng.asset_manager();
 
     let assets = assets::Assets::load(manager).await?;
@@ -138,28 +177,9 @@ async fn geng_main(geng: Geng, opts: Opts) -> anyhow::Result<()> {
         let _ = client.ping().await; // Ping the server to check if we are online
     }
 
-    let context = context::Context::new(&geng, &assets, client.as_ref())
+    let context = context::Context::new(&geng, assets, client.as_ref())
         .await
         .expect("failed to initialize context");
 
-    #[cfg(not(target_arch = "wasm32"))]
-    if let Some(command) = opts.command {
-        command
-            .execute(context, secrets)
-            .await
-            .context("failed to execute the command")?;
-        return Ok(());
-    }
-
-    // Main menu
-    if opts.skip_intro {
-        let leaderboard = leaderboard::Leaderboard::new(&geng, client.as_ref());
-        let state = menu::LevelMenu::new(context, leaderboard);
-        geng.run_state(state).await;
-    } else {
-        let state = menu::SplashScreen::new(context, client.as_ref());
-        geng.run_state(state).await;
-    }
-
-    Ok(())
+    Ok((context, secrets, client))
 }

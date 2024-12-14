@@ -16,7 +16,7 @@ pub struct MediaState {
 impl MediaState {
     pub fn new(context: Context) -> Self {
         Self {
-            util_render: UtilRender::new(context.clone()),
+            util_render: UtilRender::new(&context.geng, &context.assets),
             dither: DitherRender::new(&context.geng, &context.assets),
             text: String::new(),
             theme: Theme::default(),

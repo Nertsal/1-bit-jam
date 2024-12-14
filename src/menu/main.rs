@@ -45,7 +45,7 @@ impl MainMenu {
 
         Self {
             dither: DitherRender::new(&context.geng, &context.assets),
-            util_render: UtilRender::new(context.clone()),
+            util_render: UtilRender::new(&context.geng, &context.assets),
             ui_render: UiRender::new(context.clone()),
             leaderboard,
 
@@ -235,7 +235,7 @@ impl MainUI {
         Self {
             screen: WidgetState::new(),
             join_community: TextWidget::new("Join our community!"),
-            join_discord: IconButtonWidget::new_normal(&context.assets.sprites.discord),
+            join_discord: IconButtonWidget::new_normal(&context.assets.sprites.discor),
             profile: ProfileWidget::new(&context.assets),
         }
     }
