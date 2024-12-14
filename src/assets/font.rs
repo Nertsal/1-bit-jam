@@ -226,9 +226,8 @@ impl Font {
             descent + (measure.max.y - descent) * options.align.y,
         );
 
-        let transform = mat3::translate(position)
-            * mat3::translate(-align.rotate(options.rotation))
-            * mat3::rotate_around(vec2(measure.center().x, 0.0), options.rotation);
+        let transform =
+            mat3::translate(position) * mat3::rotate(options.rotation) * mat3::translate(-align);
 
         self.draw_with(
             framebuffer,
