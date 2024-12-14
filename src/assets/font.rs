@@ -111,7 +111,6 @@ impl Font {
         let mut cache = self.cache.borrow_mut();
         let mut cache_texture = self.cache_texture.borrow_mut();
 
-        // Workaround for https://gitlab.redox-os.org/redox-os/rusttype/-/merge_requests/158
         let glyphs: Vec<_> = text
             .chars()
             .map(|c| self.font.glyph(c))
