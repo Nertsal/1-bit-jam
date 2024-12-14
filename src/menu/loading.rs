@@ -35,7 +35,11 @@ impl<T: 'static> LoadingScreen<T> {
 
             min_load_time: if insta_load { 0.0 } else { 4.6 },
             real_time: 0.0,
-            texts: vec!["Loading assets...", "Please hold", "Loading evil >:3"],
+            texts: vec![
+                "Loading assets...",
+                "Turning the lights on...",
+                "Initializing evil... >:3",
+            ],
             current_text: 0,
             text_timer: Bounded::new_max(2.0),
         }
