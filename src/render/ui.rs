@@ -290,12 +290,8 @@ impl UiRender {
         }
 
         // Fit to area
-        let mut widget = widget.clone();
-
         let font = &self.context.assets.fonts.pixel;
-        let measure = font
-            .measure(&widget.text, vec2::splat(geng::TextAlign::CENTER))
-            .unwrap_or(Aabb2::ZERO.extend_positive(vec2(1.0, 1.0)));
+        let measure = font.measure(&widget.text, 1.0);
 
         let size = widget.state.position.size();
         let right = vec2(size.x, 0.0).rotate(widget.options.rotation).x;
@@ -307,15 +303,16 @@ impl UiRender {
         };
 
         let max_width = width * 0.9; // Leave some space TODO: move into a parameter or smth
-        let max_size = max_width / measure.width() / 0.6; // Magic constant from the util renderer that scales everything by 0.6 idk why
+        let max_size = max_width / measure.width() / 0.6; // Magic constant from the font renderer that scales everything by 0.6 idk why
         let size = widget.options.size.min(max_size);
 
-        widget.options.size = size;
+        let mut options = widget.options;
+        options.size = size;
 
         self.util.draw_text(
             &widget.text,
             geng_utils::layout::aabb_pos(widget.state.position, widget.options.align),
-            widget.options.color(color),
+            options.color(color),
             &geng::PixelPerfectCamera,
             framebuffer,
         );

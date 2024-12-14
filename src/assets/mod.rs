@@ -32,7 +32,8 @@ pub struct Assets {
 
 #[derive(geng::asset::Load)]
 pub struct Fonts {
-    pub pixel: geng::Font,
+    pub default: Rc<Font>,
+    pub pixel: Rc<Font>,
 }
 
 #[derive(geng::asset::Load)]

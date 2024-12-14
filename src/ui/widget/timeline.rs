@@ -43,7 +43,7 @@ impl TimelineWidget {
     pub fn new(context: Context) -> Self {
         Self {
             context: UiContext {
-                font: context.geng.default_font().clone(),
+                font: context.assets.fonts.default.clone(),
                 screen: Aabb2::ZERO.extend_positive(vec2(1.0, 1.0)),
                 layout_size: 1.0,
                 font_size: 1.0,

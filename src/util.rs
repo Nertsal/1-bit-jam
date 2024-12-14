@@ -1,6 +1,8 @@
 use geng::prelude::*;
 use geng_utils::bounded::Bounded;
 
+use crate::assets::Font;
+
 pub struct Lerp<T> {
     pub time: Bounded<f32>,
     pub smoothstep: bool,
@@ -63,7 +65,7 @@ pub fn with_alpha(mut color: Rgba<f32>, alpha: f32) -> Rgba<f32> {
     color
 }
 
-pub fn wrap_text(font: &geng::Font, text: &str, target_width: f32) -> Vec<String> {
+pub fn wrap_text(font: &Font, text: &str, target_width: f32) -> Vec<String> {
     let mut lines = Vec::new();
     for source_line in text.lines() {
         let mut line = String::new();
@@ -72,15 +74,7 @@ pub fn wrap_text(font: &geng::Font, text: &str, target_width: f32) -> Vec<String
                 line += word;
                 continue;
             }
-            if font
-                .measure(
-                    &(line.clone() + " " + word),
-                    vec2::splat(geng::TextAlign::CENTER),
-                )
-                .unwrap_or(Aabb2::ZERO)
-                .width()
-                > target_width
-            {
+            if font.measure(&(line.clone() + " " + word), 1.0).width() > target_width {
                 lines.push(line);
                 line = word.to_string();
             } else {

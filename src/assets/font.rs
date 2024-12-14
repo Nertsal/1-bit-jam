@@ -19,13 +19,13 @@ pub struct Font {
     descent: f32,
 }
 
-const CACHE_SIZE: usize = 1024;
+const CACHE_SIZE: usize = 4096;
 
 impl Font {
     pub fn new(manager: &geng::asset::Manager, data: Vec<u8>) -> anyhow::Result<Font> {
         let font = rusttype::Font::try_from_vec(data)
             .ok_or_else(|| anyhow::Error::msg("Failed to read font"))?;
-        let descent = font.v_metrics(rusttype::Scale { x: 1.0, y: 1.0 }).descent;
+        let metrics = font.v_metrics(rusttype::Scale { x: 1.0, y: 1.0 });
         Ok(Font {
             font,
             cache: RefCell::new(
@@ -35,16 +35,20 @@ impl Font {
                     .position_tolerance(0.1)
                     .build(),
             ),
-            cache_texture: RefCell::new(ugli::Texture2d::new_uninitialized(
-                manager.ugli(),
-                vec2(CACHE_SIZE, CACHE_SIZE),
-            )),
+            cache_texture: RefCell::new({
+                let mut texture = ugli::Texture2d::new_uninitialized(
+                    manager.ugli(),
+                    vec2(CACHE_SIZE, CACHE_SIZE),
+                );
+                texture.set_filter(ugli::Filter::Nearest);
+                texture
+            }),
             geometry: RefCell::new(ugli::VertexBuffer::new_dynamic(manager.ugli(), Vec::new())),
             program: manager
                 .shader_lib()
                 .compile(include_str!("font.glsl"))
                 .unwrap(),
-            descent,
+            descent: metrics.descent,
         })
     }
     pub fn measure_at(&self, text: &str, mut pos: vec2<f32>, size: f32) -> Aabb2<f32> {
@@ -210,23 +214,17 @@ impl Font {
             camera,
             framebuffer_size,
             vec2::splat(std::f32::consts::FRAC_1_SQRT_2),
-        );
-        options.size *= scale.len() * 0.6; // TODO: 0.6 still not sure, but it looks better
+        ) - world_to_screen(camera, framebuffer_size, vec2::ZERO);
+        options.size *= scale.len() * 0.6; // TODO: could rescale all dependent code but whatever
 
         let measure = self.measure(text, options.size);
         let size = measure.size();
         let align = size * (options.align - vec2::splat(0.5)); // Centered by default
-                                                               // let align = vec2(measure.center().x, -self.descent * options.size) + align;
         let descent = -self.descent * options.size;
         let align = vec2(
             measure.center().x + align.x,
             descent + (measure.max.y - descent) * options.align.y,
         );
-
-        // let transform = mat3::translate(position)
-        // * mat3::scale_uniform(options.size * 0.6) // TODO: figure out what that 0.6 is lmao
-        // * mat3::translate(-align.rotate(options.rotation))
-        // * mat3::rotate_around(vec2(measure.center().x, 0.0), options.rotation);
 
         let transform = mat3::translate(position)
             * mat3::translate(-align.rotate(options.rotation))
