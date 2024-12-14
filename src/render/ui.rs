@@ -104,8 +104,15 @@ impl UiRender {
         color: Color,
         framebuffer: &mut ugli::Framebuffer,
     ) {
-        let size = texture.size().as_f32() * pixel_scale(framebuffer);
-        let pos = crate::ui::layout::align_aabb(size, quad, vec2(0.5, 0.5));
+        let size = texture.size() * pixel_scale(framebuffer).round() as usize;
+        // let pos = crate::ui::layout::align_aabb(size, quad, vec2(0.5, 0.5));
+        let pos = geng_utils::pixel::pixel_perfect_aabb(
+            quad.center(),
+            vec2(0.5, 0.5),
+            size,
+            &geng::PixelPerfectCamera,
+            framebuffer.size().as_f32(),
+        );
         self.context.geng.draw2d().textured_quad(
             framebuffer,
             &geng::PixelPerfectCamera,
