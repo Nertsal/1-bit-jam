@@ -23,7 +23,10 @@ void main() {
 uniform vec4 u_color;
 uniform sampler2D u_cache_texture;
 void main() {
+    float alpha = texture2D(u_cache_texture, v_vt).w;
+    if (alpha < 0.5) {
+        discard;
+    }
     gl_FragColor = u_color;
-    gl_FragColor.w *= texture2D(u_cache_texture, v_vt).w;
 }
 #endif
