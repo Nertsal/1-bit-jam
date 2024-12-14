@@ -79,7 +79,18 @@ impl Controller {
 
         let mut groups = groups?;
         if let Ok(assets) = load_groups_all_assets().await {
-            groups.extend(assets);
+            // If a group is already loaded from local storage
+            // ignore its presence in assets
+            let ids: Vec<_> = groups
+                .iter()
+                .map(|(_, group)| group.id)
+                .filter(|id| *id != 0)
+                .collect();
+            groups.extend(
+                assets
+                    .into_iter()
+                    .filter(|(_, group)| !ids.contains(&group.id)),
+            );
         }
         Ok(groups)
     }
