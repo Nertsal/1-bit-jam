@@ -1,3 +1,7 @@
+mod font;
+
+pub use self::font::Font;
+
 use ctl_client::core::types::MusicInfo;
 use geng::prelude::*;
 
@@ -15,9 +19,7 @@ pub struct LoadingAssets {
     #[load(path = "sprites/title.png", options(filter = "ugli::Filter::Nearest"))]
     pub title: ugli::Texture,
     #[load(path = "fonts/pixel.ttf")]
-    pub font: geng::Font,
-    #[load(path = "shaders/sdf.glsl")]
-    pub font_shader: ugli::Program,
+    pub font: Font,
 }
 
 #[derive(geng::asset::Load)]

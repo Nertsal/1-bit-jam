@@ -5,7 +5,6 @@ use crate::{assets::LoadingAssets, task::Task, ui::layout::AreaOps};
 pub struct LoadingScreen<T> {
     geng: Geng,
     assets: Rc<LoadingAssets>,
-    unit_quad: ugli::VertexBuffer<draw2d::TexturedVertex>,
     options: Options,
     future: Option<Task<T>>,
     result: Option<T>,
@@ -30,7 +29,6 @@ impl<T: 'static> LoadingScreen<T> {
         Self {
             geng: geng.clone(),
             assets,
-            unit_quad: geng_utils::geometry::unit_quad_geometry(geng.ugli()),
             options: preferences::load(crate::OPTIONS_STORAGE).unwrap_or_default(),
             future: Some(Task::new(geng, future)),
             result: None,
@@ -106,54 +104,7 @@ impl<T: 'static> LoadingScreen<T> {
         options: TextRenderOptions,
     ) {
         let font = &self.assets.font;
-        let text = text.as_ref();
-
-        let measure = font
-            .measure(text, vec2::splat(geng::TextAlign::CENTER))
-            .unwrap_or(Aabb2::ZERO.extend_positive(vec2::splat(1.0)));
-        let size = measure.size();
-        let align = size * (options.align - vec2::splat(0.5)); // Centered by default
-        let align = vec2(measure.center().x, 0.0) + align;
-
-        let position = position.map(Float::as_f32);
-        let transform = mat3::translate(position.map(Float::as_f32))
-            * mat3::scale_uniform(options.size * 0.6) // TODO: figure out what that 0.6 is lmao
-            * mat3::translate(-align.rotate(options.rotation))
-            * mat3::rotate_around(vec2(measure.center().x, 0.0), options.rotation);
-
-        let framebuffer_size = framebuffer.size();
-
-        font.draw_with(
-            text,
-            vec2::splat(geng::TextAlign::CENTER),
-            |glyphs, texture| {
-                ugli::draw(
-                    framebuffer,
-                    &self.assets.font_shader,
-                    ugli::DrawMode::TriangleFan,
-                    ugli::instanced(
-                        &self.unit_quad,
-                        &ugli::VertexBuffer::new_dynamic(self.geng.ugli(), glyphs.to_vec()),
-                    ),
-                    (
-                        ugli::uniforms! {
-                            u_texture: texture,
-                            u_model_matrix: transform,
-                            u_color: options.color,
-                            u_smooth: 0.0,
-                            u_outline_dist: 0.0 / font.max_distance(),
-                            u_outline_color: Color::TRANSPARENT_BLACK,
-                        },
-                        camera.uniforms(framebuffer_size.map(|x| x as f32)),
-                    ),
-                    ugli::DrawParameters {
-                        blend_mode: Some(ugli::BlendMode::straight_alpha()),
-                        depth_func: None,
-                        ..Default::default()
-                    },
-                );
-            },
-        );
+        font.draw(framebuffer, camera, text, position, options);
     }
 }
 

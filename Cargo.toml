@@ -82,6 +82,7 @@ webbrowser.workspace = true
 directories.workspace = true
 base64.workspace = true
 async-compat.workspace = true
+rusttype = { version = "0.9.3", features = ["gpu_cache"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"] }
