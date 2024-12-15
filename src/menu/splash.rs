@@ -48,7 +48,7 @@ impl geng::State for SplashScreen {
 
         self.util.draw_text(
             "PHOTOSENSITIVITY WARNING",
-            vec2(0.0, 0.7),
+            vec2(0.0, 1.3),
             TextRenderOptions::new(1.3)
                 .align(vec2(0.5, 0.0))
                 .color(color),
@@ -57,12 +57,11 @@ impl geng::State for SplashScreen {
         );
         let warning = "
 This game contains flashing lights which might
-
 trigger seizures for people with photosensitive epilepsy
             ";
         self.util.draw_text(
             warning,
-            vec2(0.0, 0.0),
+            vec2(0.0, 0.5),
             TextRenderOptions::new(0.8)
                 .align(vec2(0.5, 1.0))
                 .color(color),

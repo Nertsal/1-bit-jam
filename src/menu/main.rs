@@ -191,6 +191,14 @@ impl geng::State for MainMenu {
         self.util_render
             .draw_button(&button, "START", &THEME, &self.camera, &mut framebuffer);
 
+        self.util_render.draw_text(
+            "made in rust btw",
+            vec2(0.0, -4.0),
+            TextRenderOptions::new(0.5).color(THEME.dark),
+            &self.camera,
+            &mut framebuffer,
+        );
+
         let fading = self.play_button.is_fading();
         if !fading {
             if let Some(pos) = self
