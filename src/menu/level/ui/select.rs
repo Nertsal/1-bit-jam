@@ -584,11 +584,13 @@ pub struct ItemGroupWidget {
 
 impl ItemGroupWidget {
     pub fn new(assets: &Rc<Assets>, text: impl Into<Name>, index: Index) -> Self {
+        let mut menu = ItemMenuWidget::new(assets);
+        menu.sync.hide(); // NOTE: Disabled in itch demo
         Self {
             state: WidgetState::new(),
             edited: IconWidget::new(&assets.sprites.star),
             local: IconWidget::new(&assets.sprites.local),
-            menu: ItemMenuWidget::new(assets),
+            menu,
             text: TextWidget::new(text).aligned(vec2(0.5, 0.5)),
             index,
         }
