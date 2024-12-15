@@ -120,30 +120,6 @@ impl GameRender {
                 .draw_player(&model.player, camera, &mut framebuffer);
         }
 
-        if !fading {
-            match model.state {
-                State::Starting { .. } | State::Playing => {}
-                State::Lost { .. } => {
-                    self.util.draw_text(
-                        "YOU FAILED TO CHASE THE LIGHT",
-                        vec2(0.0, 3.5).as_r32(),
-                        TextRenderOptions::new(1.0).color(THEME.light),
-                        camera,
-                        &mut framebuffer,
-                    );
-                }
-                State::Finished => {
-                    self.util.draw_text(
-                        "YOU CAUGHT THE LIGHT",
-                        vec2(0.0, 3.5).as_r32(),
-                        TextRenderOptions::new(1.0).color(THEME.light),
-                        camera,
-                        &mut framebuffer,
-                    );
-                }
-            }
-        }
-
         if let State::Playing = model.state {
             if !model.level.config.modifiers.clean_auto {
                 self.util.draw_health(
@@ -211,24 +187,41 @@ impl GameRender {
         let accuracy = model.score.calculated.accuracy.as_f32() * 100.0;
         let precision = model.score.calculated.precision.as_f32() * 100.0;
 
+        if !fading {
+            let text = match model.state {
+                State::Starting { .. } | State::Playing => None,
+                State::Lost { .. } => Some("YOU FAILED TO CHASE THE LIGHT"),
+                State::Finished => Some("YOU CAUGHT THE LIGHT"),
+            };
+            if let Some(text) = text {
+                self.util.draw_text(
+                    text,
+                    vec2(0.0, 3.5).as_r32(),
+                    TextRenderOptions::new(1.0).color(theme.light),
+                    &model.camera,
+                    framebuffer,
+                );
+            }
+        }
+
         if let State::Lost { .. } | State::Finished = model.state {
             if !fading {
                 self.util.draw_text(
-                    &format!("SCORE: {}", model.score.calculated.combined),
+                    format!("SCORE: {}", model.score.calculated.combined),
                     vec2(-3.0, -3.0),
                     TextRenderOptions::new(0.7).color(theme.light),
                     &model.camera,
                     framebuffer,
                 );
                 self.util.draw_text(
-                    &format!("ACCURACY: {:.2}%", accuracy),
+                    format!("ACCURACY: {:.2}%", accuracy),
                     vec2(-3.0, -3.5),
                     TextRenderOptions::new(0.7).color(theme.light),
                     &model.camera,
                     framebuffer,
                 );
                 self.util.draw_text(
-                    &format!("PRECISION: {:.2}%", precision),
+                    format!("PRECISION: {:.2}%", precision),
                     vec2(-3.0, -4.0),
                     TextRenderOptions::new(0.7).color(theme.light),
                     &model.camera,

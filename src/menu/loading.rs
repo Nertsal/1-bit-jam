@@ -39,6 +39,7 @@ impl<T: 'static> LoadingScreen<T> {
                 "Loading assets...",
                 "Turning the lights on...",
                 "Initializing evil... >:3",
+                "Why is this taking so long?",
             ],
             current_text: 0,
             text_timer: Bounded::new_max(2.0),

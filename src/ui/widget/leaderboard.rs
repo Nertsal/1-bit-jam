@@ -136,7 +136,7 @@ impl LeaderboardWidget {
                     &self.assets,
                     board
                         .my_position
-                        .map_or("???".into(), |rank| format!("{}", rank + 1)),
+                        .map_or("local".into(), |rank| format!("{}", rank + 1)),
                     score.clone(),
                     false,
                 );
@@ -286,7 +286,7 @@ impl Widget for LeaderboardEntryWidget {
             modifier.update(pos, context);
         }
 
-        let rank = main.cut_left(context.font_size * 1.0);
+        let rank = main.cut_left(context.font_size * 2.0);
         self.rank.update(rank, context);
         main.cut_left(context.font_size * 0.2);
 
