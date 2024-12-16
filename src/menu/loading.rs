@@ -33,7 +33,7 @@ impl<T: 'static> LoadingScreen<T> {
             future: Some(Task::new(geng, future)),
             result: None,
 
-            min_load_time: if insta_load { 0.0 } else { 4.6 },
+            min_load_time: if insta_load { 0.0 } else { 4.3 },
             real_time: 0.0,
             texts: vec![
                 "Loading assets...",
@@ -127,11 +127,30 @@ impl<T: 'static> geng::State for LoadingScreen<T> {
         ugli::clear(framebuffer, Some(self.options.theme.dark), None, None);
 
         let framebuffer_size = framebuffer.size().as_f32();
-        let font_size = framebuffer_size.y * 0.07;
+        let font_size = framebuffer_size.y * 0.09;
         let theme = self.options.theme;
 
         let screen = Aabb2::ZERO.extend_positive(framebuffer_size);
         let camera = &geng::PixelPerfectCamera;
+
+        // Background
+        {
+            let gif = &self.assets.background;
+            let duration: f32 = gif.iter().map(|frame| frame.duration).sum();
+            let mut time = (self.real_time as f32 / duration).fract() * duration;
+            if let Some(frame) = gif.iter().find(|frame| {
+                time -= frame.duration;
+                time <= 0.0
+            }) {
+                self.geng.draw2d().textured_quad(
+                    framebuffer,
+                    camera,
+                    screen,
+                    &frame.texture,
+                    Color::WHITE,
+                );
+            }
+        }
 
         // Fake loading bar
         let size = vec2(10.0, 0.8) * font_size;
@@ -152,7 +171,7 @@ impl<T: 'static> geng::State for LoadingScreen<T> {
         let title = geng_utils::pixel::pixel_perfect_aabb(
             screen.align_pos(vec2(0.5, 0.8)),
             vec2(0.5, 0.5),
-            self.assets.title.size() * (framebuffer.size().y / 360),
+            self.assets.title.size() * 2 * (framebuffer.size().y / 360),
             camera,
             framebuffer_size,
         );
@@ -166,7 +185,7 @@ impl<T: 'static> geng::State for LoadingScreen<T> {
 
         // Funny text
         if let Some(text) = self.texts.get(self.current_text) {
-            let pos = screen.align_pos(vec2(0.5, 0.5));
+            let pos = screen.align_pos(vec2(0.5, 0.45));
             self.draw_text(
                 framebuffer,
                 camera,
@@ -177,21 +196,21 @@ impl<T: 'static> geng::State for LoadingScreen<T> {
         }
 
         {
-            let font_size = font_size * 0.7;
+            let font_size = font_size * 0.9;
             self.draw_text(
                 framebuffer,
                 camera,
                 "music by IcyLava",
-                vec2(2.0, 2.0) * font_size,
+                screen.align_pos(vec2(0.5, 0.65)) + vec2(7.0, 0.0) * font_size,
                 TextRenderOptions::new(font_size)
-                    .align(vec2(0.0, 0.5))
+                    .align(vec2(1.0, 0.5))
                     .color(theme.light),
             );
             self.draw_text(
                 framebuffer,
                 camera,
                 "by Nertsal",
-                vec2(2.0, 3.2) * font_size,
+                screen.align_pos(vec2(0.5, 0.65)) - vec2(7.0, 0.0) * font_size,
                 TextRenderOptions::new(font_size)
                     .align(vec2(0.0, 0.5))
                     .color(theme.light),
